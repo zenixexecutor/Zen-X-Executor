@@ -1,0 +1,117 @@
+-- Xx.lua - Full example Zen-X executor module
+
+local Xx = {}
+
+-- Script definitions with basic stub functions
+local availableScripts = {
+    AutoFarm = {
+        description = "Automatically farms resources",
+        run = function()
+            print("[Xx] AutoFarm started.")
+            -- Insert AutoFarm logic here
+        end,
+        stop = function()
+            print("[Xx] AutoFarm stopped.")
+            -- Insert AutoFarm stop logic here
+        end,
+    },
+
+    ESP = {
+        description = "Enemy ESP highlight",
+        run = function()
+            print("[Xx] ESP enabled.")
+            -- Insert ESP logic here
+        end,
+        stop = function()
+            print("[Xx] ESP disabled.")
+            -- Insert ESP stop logic here
+        end,
+    },
+
+    Fly = {
+        description = "Enables flying ability",
+        run = function()
+            print("[Xx] Fly mode enabled.")
+            -- Insert Fly logic here
+        end,
+        stop = function()
+            print("[Xx] Fly mode disabled.")
+            -- Insert Fly stop logic here
+        end,
+    },
+}
+
+-- State
+local isInitialized = false
+local runningScripts = {}
+
+function Xx:Init()
+    if isInitialized then
+        print("[Xx] Already initialized.")
+        return
+    end
+    print("[Xx] Initializing executor...")
+    -- Setup code here (e.g., connect events, prepare environment)
+    isInitialized = true
+end
+
+-- Run a script by name
+function Xx:RunScript(scriptName)
+    if not isInitialized then
+        warn("[Xx] Executor not initialized. Call :Init() first.")
+        return
+    end
+
+    local scriptData = availableScripts[scriptName]
+    if not scriptData then
+        warn("[Xx] Script '" .. scriptName .. "' not found.")
+        return
+    end
+
+    if runningScripts[scriptName] then
+        print("[Xx] Script '" .. scriptName .. "' is already running.")
+        return
+    end
+
+    print("[Xx] Running script:", scriptName)
+    runningScripts[scriptName] = true
+
+    -- Run the script function in a separate thread to avoid blocking
+    coroutine.wrap(function()
+        scriptData.run()
+    end)()
+end
+
+-- Stop a running script by name
+function Xx:StopScript(scriptName)
+    if not runningScripts[scriptName] then
+        print("[Xx] Script '" .. scriptName .. "' is not running.")
+        return
+    end
+
+    local scriptData = availableScripts[scriptName]
+    if scriptData and scriptData.stop then
+        print("[Xx] Stopping script:", scriptName)
+        scriptData.stop()
+    end
+
+    runningScripts[scriptName] = nil
+end
+
+-- Stop all running scripts
+function Xx:StopAllScripts()
+    for scriptName, _ in pairs(runningScripts) do
+        self:StopScript(scriptName)
+    end
+end
+
+-- Get list of available scripts (name and description)
+function Xx:GetAvailableScripts()
+    local list = {}
+    for name, data in pairs(availableScripts) do
+        table.insert(list, { name = name, description = data.description })
+    end
+    return list
+end
+
+return Xx
